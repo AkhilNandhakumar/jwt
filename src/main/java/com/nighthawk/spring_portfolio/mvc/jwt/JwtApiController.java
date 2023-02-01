@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.nighthawk.spring_portfolio.mvc.person.Person;
-import com.nighthawk.spring_portfolio.mvc.person.PersonDetailsService;
 
 @RestController
 @CrossOrigin
@@ -28,12 +27,12 @@ public class JwtApiController {
 	private JwtTokenUtil jwtTokenUtil;
 
 	@Autowired
-	private PersonDetailsService personDetailsService;
+	private JwtUserDetailsService jwtUserDetailsService;
 
 	@PostMapping("/authenticate")
 	public ResponseEntity<?> createAuthenticationToken(@RequestBody Person authenticationRequest) throws Exception {
 		authenticate(authenticationRequest.getEmail(), authenticationRequest.getPassword());
-		final UserDetails userDetails = personDetailsService
+		final UserDetails userDetails = jwtUserDetailsService
 				.loadUserByUsername(authenticationRequest.getEmail());
 		final String token = jwtTokenUtil.generateToken(userDetails);
 		final ResponseCookie tokenCookie = ResponseCookie.from("jwt", token)
