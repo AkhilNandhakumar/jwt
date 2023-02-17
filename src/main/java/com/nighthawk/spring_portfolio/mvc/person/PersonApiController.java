@@ -4,7 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.web.bind.annotation.*;
+
+import com.mongodb.internal.async.client.Crypt;
 
 import java.util.*;
 import java.text.SimpleDateFormat;
@@ -64,10 +67,14 @@ public class PersonApiController {
     POST Aa record by Requesting Parameters from URI
      */
     @PostMapping( "/post")
-    public ResponseEntity<Object> postPerson(@RequestParam("email") String email,
-                                             @RequestParam("password") String password,
-                                             @RequestParam("name") String name,
-                                             @RequestParam("dob") String dobString) {
+    public ResponseEntity<Object> postPerson(@RequestBody final Map<String,String> map) {
+
+        String email = (String) map.get("email");
+        String password = (String) map.get("password");
+        String name = (String) map.get("name");
+        String dobString = (String) map.get("dob");
+
+
         Date dob;
         try {
             dob = new SimpleDateFormat("MM-dd-yyyy").parse(dobString);
@@ -75,7 +82,8 @@ public class PersonApiController {
             return new ResponseEntity<>(dobString +" error; try MM-dd-yyyy", HttpStatus.BAD_REQUEST);
         }
         // A person object WITHOUT ID will create a new record with default roles as student
-        Person person = new Person(email, password, name, dob);
+        String passwordEncrypt = BCrypt.hashpw(password, BCrypt.gensalt());
+        Person person = new Person(email, passwordEncrypt, name, dob);
         repository.save(person);
         return new ResponseEntity<>(email +" is created successfully", HttpStatus.CREATED);
     }
@@ -98,32 +106,32 @@ public class PersonApiController {
     /*
     The personStats API adds stats by Date to Person table 
     */
-    @PostMapping(value = "/setStats", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Person> personStats(@RequestBody final Map<String,Object> stat_map) {
-        // find ID
-        long id=Long.parseLong((String)stat_map.get("id"));  
-        Optional<Person> optional = repository.findById((id));
-        if (optional.isPresent()) {  // Good ID
-            Person person = optional.get();  // value from findByID
+    // @PostMapping(value = "/setStats", produces = MediaType.APPLICATION_JSON_VALUE)
+    // public ResponseEntity<Person> personStats(@RequestBody final Map<String,Object> stat_map) {
+    //     // find ID
+    //     long id=Long.parseLong((String)stat_map.get("id"));  
+    //     Optional<Person> optional = repository.findById((id));
+    //     if (optional.isPresent()) {  // Good ID
+    //         Person person = optional.get();  // value from findByID
 
-            // Extract Attributes from JSON
-            Map<String, Object> attributeMap = new HashMap<>();
-            for (Map.Entry<String,Object> entry : stat_map.entrySet())  {
-                // Add all attribute other thaN "date" to the "attribute_map"
-                if (!entry.getKey().equals("date") && !entry.getKey().equals("id"))
-                    attributeMap.put(entry.getKey(), entry.getValue());
-            }
+    //         // Extract Attributes from JSON
+    //         Map<String, Object> attributeMap = new HashMap<>();
+    //         for (Map.Entry<String,Object> entry : stat_map.entrySet())  {
+    //             // Add all attribute other thaN "date" to the "attribute_map"
+    //             if (!entry.getKey().equals("date") && !entry.getKey().equals("id"))
+    //                 attributeMap.put(entry.getKey(), entry.getValue());
+    //         }
 
-            // Set Date and Attributes to SQL HashMap
-            Map<String, Map<String, Object>> date_map = new HashMap<>();
-            date_map.put( (String) stat_map.get("date"), attributeMap );
-            person.setStats(date_map);  // BUG, needs to be customized to replace if existing or append if new
-            repository.save(person);  // conclude by writing the stats updates
+    //         // Set Date and Attributes to SQL HashMap
+    //         Map<String, Map<String, Object>> date_map = new HashMap<>();
+    //         date_map.put( (String) stat_map.get("date"), attributeMap );
+    //         person.setStats(date_map);  // BUG, needs to be customized to replace if existing or append if new
+    //         repository.save(person);  // conclude by writing the stats updates
 
-            // return Person with update Stats
-            return new ResponseEntity<>(person, HttpStatus.OK);
-        }
-        // return Bad ID
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST); 
-    }
+    //         // return Person with update Stats
+    //         return new ResponseEntity<>(person, HttpStatus.OK);
+    //     }
+    //     // return Bad ID
+    //     return new ResponseEntity<>(HttpStatus.BAD_REQUEST); 
+    // }
 }
