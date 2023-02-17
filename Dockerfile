@@ -6,4 +6,6 @@ RUN apk update && apk upgrade && \
 COPY . /app
 RUN ./mvnw package
 CMD ["java", "-jar", "target/spring-0.0.1-SNAPSHOT.jar"]
-EXPOSE 8085
+EXPOSE 5962
+
+
