@@ -4,7 +4,7 @@ services:
     image: java_springv1
     build: .
     ports:
-      - "5962:5962"
+      - "8114:8114"
     volumes:
       - persistent_volume:/app/volumes
     restart: unless-stopped
@@ -14,7 +14,7 @@ volumes:
     driver_opts:
       o: bind
       type: none
-      device: /home/ubuntu/tri2_T8_5962_SACSJazzyIsKing/volumes
+      device: /home/ubuntu/tri2_t7_jwt_backend_8114/volumes
 
 
 
